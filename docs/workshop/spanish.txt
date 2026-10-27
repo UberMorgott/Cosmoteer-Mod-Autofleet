@@ -1,0 +1,41 @@
+Autofleet (beta)
+[h1]Autofleet (beta)[/h1]
+[i]Automatiza tus propias naves: crea el comportamiento de cada nave a partir de módulos, guárdalo como perfil y asígnalo a tantas naves como quieras.[/i]
+
+[h2]Beta cerrada[/h2]
+Esto es una beta. Habrá asperezas: informa de los problemas con una descripción y tu [b]Autofleet.log[/b] (en la carpeta del mod). Cada acción es una orden estándar del juego enviada por su cola de entrada, así que el multijugador debería mantenerse sincronizado, pero [b]el multijugador aún no se ha probado[/b].
+
+[h2]Qué hace[/h2]
+[list]
+[*][b]Perfiles de módulos de comportamiento[/b]: combina módulos, fija su prioridad, sus parámetros y cuándo se ejecutan (siempre / solo con ancla / solo sin ancla). Incluye perfiles iniciales (Minera, Caza, Constructora, Comerciante, Escolta y más). Los cambios se aplican al instante a todas las naves que usan el perfil.
+[*][b]Minería[/b]: las mineras extraen asteroides, vuelan a su nave de descarga cuando la bodega está llena, descargan y vuelven al trabajo. Recuerdan las rocas agotadas y se desatascan solas.
+[*][b]Guardia, caza, autodefensa[/b]: protege una nave ancla, busca y ataca enemigos dentro de una zona, o simplemente responde cuando te atacan.
+[*][b]Retirada y huida[/b]: se retira por daños en el casco, huye de los enemigos en un arco de escape predictivo y, opcionalmente, se repara junto a naves aliadas una vez a salvo.
+[*][b]Ancla y formación[/b]: vincula naves a una nave ancla; las naves que comparten ancla mantienen puestos de formación a su alrededor.
+[*][b]Abastecimiento, tripulación, contratación[/b]: reabastece al ancla con el excedente, le cede la tripulación sobrante y contrata tripulación hasta un objetivo de un proveedor al alcance.
+[*][b]Economía[/b]: límites máximos por recurso, venta de excedentes en estaciones descubiertas, detiene las fábricas al llegar al máximo y las reinicia por debajo.
+[/list]
+
+[h2]Cómo se usa[/h2]
+[list]
+[*]Abre la ventana con [b]Ctrl+Alt+A[/b] o con el botón de la barra de menú (arriba a la izquierda).
+[*][b]Asignaciones[/b] sigue tu selección actual: elige un perfil, una nave ancla, el destino de descarga y una zona de trabajo. Se puede ajustar nave por nave.
+[*][b]Perfiles[/b]: crea, duplica, renombra y edita perfiles y sus módulos.
+[*]Una orden manual pausa la automatización de esa nave; se reanuda unos segundos después de que terminen tus órdenes. [b]Pausa[/b] la detiene hasta que la reanudes y se conserva al guardar y cargar.
+[/list]
+
+[h2]Requisitos[/h2]
+[list]
+[*][b]Yet Another Mod Loader[/b] (Workshop 3577650065), instalado según sus propias instrucciones.
+[*]Activa Autofleet en la lista de Mods del juego y [b]confía[/b] en su biblioteca allí.
+[*]No uses otro mod de automatización en las mismas naves: ambos les darían órdenes.
+[/list]
+
+[h2]Límites conocidos[/h2]
+[list]
+[*]Multijugador no probado.
+[*]La descarga necesita una ruta de tripulación a través de esclusas, como en el juego base.
+[*]La retirada no usa el Hipersalto.
+[/list]
+
+Idiomas: inglés, alemán, español, francés, japonés, portugués (Brasil), ruso, chino (simplificado).

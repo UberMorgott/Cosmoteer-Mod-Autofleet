@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Tests the game-independent rules (src\**\*.Core.cs and the pure model/store files); needs no game install and no
+       game assembly at build or run time. The few game calls those files make are stood in by GameStubs.cs. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>12.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\src\FleetChecks.cs" Link="src\FleetChecks.cs" />
+    <Compile Include="..\..\src\FleetJump.Core.cs" Link="src\FleetJump.Core.cs" />
+    <Compile Include="..\..\src\Log.cs" Link="src\Log.cs" />
+    <Compile Include="..\..\src\SortList.Core.cs" Link="src\SortList.Core.cs" />
+    <Compile Include="..\..\src\Window.Core.cs" Link="src\Window.Core.cs" />
+    <Compile Include="..\..\src\World.Core.cs" Link="src\World.Core.cs" />
+    <Compile Include="..\..\src\Autofleet\Ledger.Core.cs" Link="src\Autofleet\Ledger.Core.cs" />
+    <Compile Include="..\..\src\Autofleet\Logistics.Core.cs" Link="src\Autofleet\Logistics.Core.cs" />
+    <Compile Include="..\..\src\Autofleet\Model.cs" Link="src\Autofleet\Model.cs" />
+    <Compile Include="..\..\src\Autofleet\Registry.cs" Link="src\Autofleet\Registry.cs" />
+    <Compile Include="..\..\src\Autofleet\Resolver.cs" Link="src\Autofleet\Resolver.cs" />
+    <Compile Include="..\..\src\Autofleet\ShipAgent.Core.cs" Link="src\Autofleet\ShipAgent.Core.cs" />
+    <Compile Include="..\..\src\Autofleet\ShipCommands.cs" Link="src\Autofleet\ShipCommands.cs" />
+    <Compile Include="..\..\src\Autofleet\Store.cs" Link="src\Autofleet\Store.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
+    <!-- mtp-off: the .NET 10 SDK refuses `dotnet test` (VSTest) for projects wired to Microsoft.Testing.Platform. -->
+    <PackageReference Include="xunit.v3.mtp-off" Version="4.0.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="4.0.1" />
+  </ItemGroup>
+</Project>

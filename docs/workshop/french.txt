@@ -1,0 +1,41 @@
+Autofleet (beta)
+[h1]Autofleet (bêta)[/h1]
+[i]Automatisez vos propres vaisseaux : construisez le comportement de chaque vaisseau à partir de modules, enregistrez-le comme profil et affectez-le à autant de vaisseaux que vous voulez.[/i]
+
+[h2]Bêta fermée[/h2]
+Ceci est une bêta. Attendez-vous à des imperfections et signalez les problèmes avec une description et votre [b]Autofleet.log[/b] (dans le dossier du mod). Chaque action est une commande vanilla envoyée via la file d'entrées du jeu, le multijoueur devrait donc rester synchronisé, mais [b]le multijoueur n'est pas encore testé[/b].
+
+[h2]Fonctionnalités[/h2]
+[list]
+[*][b]Profils de modules de comportement[/b] : combinez des modules, réglez leur priorité, leurs paramètres et quand ils s'exécutent (toujours / seulement avec ancre / seulement sans ancre). Profils de départ inclus (Mineur, Chasseur, Constructeur, Marchand, Garde d'escorte et d'autres). Les modifications s'appliquent en direct à chaque vaisseau utilisant le profil.
+[*][b]Extraction[/b] : les mineurs extraient les astéroïdes, rejoignent leur vaisseau de déchargement quand la soute est pleine, déchargent et retournent au travail. Ils mémorisent les rochers épuisés et se décoincent seuls.
+[*][b]Garde, Chasse, autodéfense[/b] : protégez un vaisseau-ancre, traquez et attaquez les ennemis dans une zone, ou ripostez simplement quand vous êtes attaqué.
+[*][b]Repli et fuite[/b] : repli en cas de dégâts à la coque, fuite face aux ennemis sur un arc prédictif, réparation facultative près de vaisseaux alliés une fois en sécurité.
+[*][b]Ancre et formation[/b] : liez des vaisseaux à un vaisseau-ancre ; les vaisseaux partageant une ancre gardent leur place en formation autour d'elle.
+[*][b]Ravitaillement, équipage, engagement[/b] : réapprovisionnez l'ancre avec le surplus, donnez-lui l'équipage en trop, engagez de l'équipage jusqu'à un objectif auprès d'un fournisseur à portée.
+[*][b]Économie[/b] : limites maximales par ressource, vente du surplus aux stations découvertes, arrêt des usines à la limite et relance en dessous.
+[/list]
+
+[h2]Utilisation[/h2]
+[list]
+[*]Ouvrez la fenêtre avec [b]Ctrl+Alt+A[/b] ou le bouton de la barre de menu (en haut à gauche).
+[*][b]Affectations[/b] suit votre sélection actuelle : choisissez un profil, un vaisseau-ancre, la cible de déchargement et une zone de travail. Des réglages par vaisseau sont possibles.
+[*][b]Profils[/b] : créez, dupliquez, renommez et modifiez les profils et leurs modules.
+[*]Un ordre manuel met en pause l'automatisation de ce vaisseau ; elle reprend quelques secondes après la fin de vos ordres. [b]Pause[/b] l'arrête jusqu'à ce que vous la repreniez, et survit à la sauvegarde/au chargement.
+[/list]
+
+[h2]Prérequis[/h2]
+[list]
+[*][b]Yet Another Mod Loader[/b] (Workshop 3577650065), installé selon ses propres instructions.
+[*]Activez Autofleet dans la liste des mods du jeu et marquez-y sa bibliothèque comme [b]fiable[/b].
+[*]N'utilisez pas un autre mod d'automatisation sur les mêmes vaisseaux : les deux leur donneraient des ordres.
+[/list]
+
+[h2]Limites connues[/h2]
+[list]
+[*]Multijoueur non testé.
+[*]Le déchargement nécessite un accès de l'équipage par les sas, comme en vanilla.
+[*]Le repli n'utilise pas le saut en hyperespace.
+[/list]
+
+Langues : anglais, allemand, espagnol, français, japonais, portugais (Brésil), russe, chinois (simplifié).

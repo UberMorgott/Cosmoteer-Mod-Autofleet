@@ -1,0 +1,41 @@
+Autofleet (beta)
+[h1]Autofleet (beta)[/h1]
+[i]Automate your own ships: build each ship's behaviour from modules, save it as a profile, assign it to as many ships as you like.[/i]
+
+[h2]Closed beta[/h2]
+This is a beta. Expect rough edges and report problems with a description and your [b]Autofleet.log[/b] (in the mod folder). Every action is a vanilla command sent through the game's input queue, so multiplayer should stay in lockstep, but [b]multiplayer is not tested yet[/b].
+
+[h2]What it does[/h2]
+[list]
+[*][b]Profiles of behaviour modules[/b]: combine modules, set their priority, parameters and when they run (always / only anchored / only unanchored). Starter profiles included (Miner, Fighter, Builder, Trader, Escort guard and more). Edits apply live to every ship using the profile.
+[*][b]Mining[/b]: miners mine asteroids, fly to their offload ship when the hold is full, unload and return to work. Remembers depleted rocks, gets itself unstuck.
+[*][b]Guard, Hunt, self-defence[/b]: protect an anchor ship, seek and attack enemies inside an area, or just fight back when attacked.
+[*][b]Retreat and escape[/b]: retreat on hull damage, flee from enemies on a predictive escape arc, optionally repair next to friendly ships once safe.
+[*][b]Anchor and formation[/b]: link ships to an anchor ship; ships sharing an anchor keep formation slots around it.
+[*][b]Supply, crew, hiring[/b]: top up the anchor from surplus, hand spare crew to it, hire crew up to a target from a provider in range.
+[*][b]Economy[/b]: keep-max limits per resource, sell surplus at discovered stations, stop factories at keep-max and restart them below it.
+[/list]
+
+[h2]How to use[/h2]
+[list]
+[*]Open the window with [b]Ctrl+Alt+A[/b] or the menu-bar button (top left).
+[*][b]Assignments[/b] follows your current selection: pick a profile, an anchor ship, the offload target and a work zone. Per-ship overrides are possible.
+[*][b]Profiles[/b]: create, duplicate, rename and edit profiles and their modules.
+[*]A manual order pauses that ship's automation; it resumes a few seconds after your orders finish. [b]Pause[/b] stops it until you resume, and survives save/load.
+[/list]
+
+[h2]Requirements[/h2]
+[list]
+[*][b]Yet Another Mod Loader[/b] (Workshop 3577650065), installed with its own instructions.
+[*]Enable Autofleet in the in-game Mods list and [b]trust[/b] its library there.
+[*]Do not run another automation mod on the same ships: both would command them.
+[/list]
+
+[h2]Known limits[/h2]
+[list]
+[*]Multiplayer not tested.
+[*]Offloading needs a crew path through airlocks, as in vanilla.
+[*]Retreat does not use FTL.
+[/list]
+
+Languages: English, German, Spanish, French, Japanese, Portuguese (Brazil), Russian, Chinese (Simplified).

@@ -1,0 +1,41 @@
+Autofleet (beta)
+[h1]Autofleet (beta)[/h1]
+[i]Automatisiere deine eigenen Schiffe: Stelle das Verhalten jedes Schiffs aus Modulen zusammen, speichere es als Profil und weise es beliebig vielen Schiffen zu.[/i]
+
+[h2]Geschlossene Beta[/h2]
+Dies ist eine Beta. Rechne mit Ecken und Kanten und melde Probleme mit einer Beschreibung und deiner [b]Autofleet.log[/b] (im Mod-Ordner). Jede Aktion ist ein normaler Spielbefehl, der über die Eingabewarteschlange des Spiels gesendet wird, daher sollte der Mehrspielermodus synchron bleiben, aber [b]der Mehrspielermodus ist noch nicht getestet[/b].
+
+[h2]Was die Mod kann[/h2]
+[list]
+[*][b]Profile aus Verhaltensmodulen[/b]: Kombiniere Module, lege ihre Priorität, Parameter und Laufbedingung fest (immer / nur mit Anker / nur ohne Anker). Startprofile sind dabei (Bergbauschiff, Jäger, Bauer, Händler, Geleitschutz und mehr). Änderungen gelten sofort für jedes Schiff mit dem Profil.
+[*][b]Abbau[/b]: Bergbauschiffe bauen Asteroiden ab, fliegen bei vollem Frachtraum zu ihrem Entladeschiff, entladen und kehren zur Arbeit zurück. Merkt sich erschöpfte Felsen und befreit sich selbst, wenn es feststeckt.
+[*][b]Wache, Jagd, Selbstverteidigung[/b]: Beschütze ein Ankerschiff, suche und greife Feinde in einem Gebiet an oder wehre dich einfach, wenn du angegriffen wirst.
+[*][b]Rückzug und Flucht[/b]: Rückzug bei Rumpfschaden, Flucht vor Feinden auf einem vorausberechneten Fluchtbogen, optional Reparatur neben verbündeten Schiffen, sobald es sicher ist.
+[*][b]Anker und Formation[/b]: Binde Schiffe an ein Ankerschiff; Schiffe mit gemeinsamem Anker halten Formationsplätze um ihn herum.
+[*][b]Versorgung, Crew, Anheuern[/b]: Fülle den Anker aus Überschüssen auf, gib überzählige Crew an ihn ab, heuere Crew bis zu einem Zielwert bei einem Anbieter in Reichweite an.
+[*][b]Wirtschaft[/b]: Höchstgrenzen pro Ressource, Verkauf von Überschuss an entdeckten Stationen, Abschalten von Fabriken bei der Höchstgrenze und Neustart darunter.
+[/list]
+
+[h2]Bedienung[/h2]
+[list]
+[*]Öffne das Fenster mit [b]Ctrl+Alt+A[/b] oder der Schaltfläche in der Menüleiste (oben links).
+[*][b]Zuweisungen[/b] folgt deiner aktuellen Auswahl: Wähle ein Profil, ein Ankerschiff, das Entladeziel und eine Arbeitszone. Abweichungen pro Schiff sind möglich.
+[*][b]Profile[/b]: Profile und ihre Module erstellen, duplizieren, umbenennen und bearbeiten.
+[*]Ein manueller Befehl pausiert die Automatik dieses Schiffs; sie setzt einige Sekunden nach Abschluss deiner Befehle fort. [b]Pause[/b] hält sie an, bis du fortsetzt, und übersteht Speichern/Laden.
+[/list]
+
+[h2]Voraussetzungen[/h2]
+[list]
+[*][b]Yet Another Mod Loader[/b] (Workshop 3577650065), installiert nach seiner eigenen Anleitung.
+[*]Aktiviere Autofleet in der Mod-Liste im Spiel und [b]vertraue[/b] dort seiner Bibliothek.
+[*]Nutze keine andere Automatisierungs-Mod für dieselben Schiffe: Beide würden ihnen Befehle geben.
+[/list]
+
+[h2]Bekannte Einschränkungen[/h2]
+[list]
+[*]Mehrspielermodus nicht getestet.
+[*]Entladen braucht wie im Grundspiel einen Crew-Weg durch Luftschleusen.
+[*]Rückzug nutzt keinen Hypersprung.
+[/list]
+
+Sprachen: Englisch, Deutsch, Spanisch, Französisch, Japanisch, Portugiesisch (Brasilien), Russisch, Chinesisch (vereinfacht).
