@@ -30,7 +30,8 @@ internal static partial class World
     private static readonly Dictionary<ID<ResourceRules>, int> ResourceIndex = new();
 
     // Per-asteroid cache: bitmask of resource indices its parts drop, recomputed only when its part count changes.
-    private static readonly Dictionary<Ship, (int PartCount, ulong Mask)> AsteroidMasks = new();
+    // Weak keys: despawned/stasis rocks drop out with their Ship instead of living until the next jump.
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<Ship, System.Runtime.CompilerServices.StrongBox<(int PartCount, ulong Mask)>> AsteroidMasks = new();
     private static ulong _seenAsteroidMask;
     private static ulong _seenWreckMask;
     private static SimRoot? _cacheSim;
@@ -857,9 +858,9 @@ internal static partial class World
     public static ulong GetAsteroidMask(Ship asteroid)
     {
         int count = asteroid.Parts.Count;
-        if (AsteroidMasks.TryGetValue(asteroid, out var cached) && cached.PartCount == count)
+        if (AsteroidMasks.TryGetValue(asteroid, out var cached) && cached.Value.PartCount == count)
         {
-            return cached.Mask;
+            return cached.Value.Mask;
         }
         ulong mask = 0;
         for (int p = 0; p < count; p++)
@@ -879,7 +880,7 @@ internal static partial class World
                 }
             }
         }
-        AsteroidMasks[asteroid] = (count, mask);
+        AsteroidMasks.AddOrUpdate(asteroid, new((count, mask)));
         if (asteroid.Rules.IsAsteroid)
         {
             _seenAsteroidMask |= mask;
@@ -1649,7 +1650,8 @@ internal static partial class World
     public static readonly List<Vector2> ThreatVels = new();
     public static void ClearThreats() { ThreatZones.Clear(); ThreatVels.Clear(); }
     public static float MinerSpeed(Ship s) => s.Physics.Body is { } b ? ((Vector2)b.LinearVelocity).Length : 0f;
-    private static readonly Dictionary<Ship, (long At, float Range)> RangeCache = new();
+    // Weak keys: every enemy ever checked would otherwise stay alive for the whole process.
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<Ship, System.Runtime.CompilerServices.StrongBox<(long At, float Range)>> RangeCache = new();
     private const float ThreatMargin = 400f;
     private const float UnknownThreatRange = 1500f;
 
@@ -1688,9 +1690,9 @@ internal static partial class World
     /// <summary>Max standard weapon range of <paramref name="s"/> (5 s cache, capped 8000); unarmed/unknown = 1500.</summary>
     internal static float WeaponRange(Ship s, long nowMs)
     {
-        if (RangeCache.TryGetValue(s, out var c) && nowMs - c.At < 5000)
+        if (RangeCache.TryGetValue(s, out var c) && nowMs - c.Value.At < 5000)
         {
-            return c.Range;
+            return c.Value.Range;
         }
         float max = 0f;
         var weapons = s.Weapons.OperationalWeapons;
@@ -1707,7 +1709,7 @@ internal static partial class World
         {
             max = UnknownThreatRange; // unarmed or unknown: keep a modest berth
         }
-        RangeCache[s] = (nowMs, max);
+        RangeCache.AddOrUpdate(s, new((nowMs, max)));
         return max;
     }
 
