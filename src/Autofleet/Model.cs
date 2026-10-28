@@ -391,6 +391,14 @@ internal sealed class ShipAssignment : Extensible
     public TempIntent Temp { get; set; }
     public RuntimeRecord? Runtime { get; set; }
 
+    /// <summary>Automation off with no pending pause or temporary order (the caller persists it).</summary>
+    public void Disable()
+    {
+        Enabled = false;
+        UserPaused = false;
+        Temp = TempIntent.None;
+    }
+
     /// <summary>Bumped on every edit; the agent recompiles its config when it changes.</summary>
     [JsonIgnore]
     public int Version { get; set; }

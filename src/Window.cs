@@ -220,6 +220,7 @@ internal sealed partial class MinerWindow : QuickWindowBox
     // fleet tree: every own ship, grouped by profile in library order, unmanaged last (refreshed 1 Hz)
     private readonly List<Ship> _fleet = new();
     private readonly List<string> _fleetIds = new();
+    private readonly List<string> _ownIds = new(); // checkable rows: ships this client drives (others are read-only)
     private readonly List<string> _fleetText = new();
     private readonly List<IQuickWidgetModifier<Widget>?> _fleetTips = new();
     private readonly List<TreeGroup> _groups = new();
@@ -369,7 +370,7 @@ internal sealed partial class MinerWindow : QuickWindowBox
         bool any = false;
         foreach (Ship s in sim.PlayerInput.SelectedShips)
         {
-            if (s.IsLocalPlayerShip && !s.Rules.IsAsteroid)
+            if (World.Drives(_game, s) && !s.Rules.IsAsteroid)
             {
                 if (!any)
                 {
@@ -383,7 +384,20 @@ internal sealed partial class MinerWindow : QuickWindowBox
     }
 
     /// <summary>Checked ship IDs (the area picker places the circle for these while the window is open).</summary>
-    public IEnumerable<string> TargetIds => _checked;
+    public IEnumerable<string> TargetIds
+    {
+        get
+        {
+            for (int i = 0; i < _fleet.Count; i++)
+            {
+                // Live owner check, as in BuildScope: a ship given away since the last tree refresh is not placed.
+                if (_checked.Contains(_fleetIds[i]) && World.Drives(_game, _fleet[i]))
+                {
+                    yield return _fleetIds[i];
+                }
+            }
+        }
+    }
 
     private void BuildScope(Cosmoteer.Simulation.SimRoot sim)
     {
@@ -398,7 +412,8 @@ internal sealed partial class MinerWindow : QuickWindowBox
         for (int i = 0; i < _fleet.Count; i++)
         {
             Ship s = _fleet[i];
-            if (!_checked.Contains(_fleetIds[i]) || s.IsJunk || !s.ExistsInSim(sim))
+            // Live owner check: the tree refreshes at 1 Hz, a ship given away meanwhile must not be edited.
+            if (!_checked.Contains(_fleetIds[i]) || s.IsJunk || !s.ExistsInSim(sim) || !World.Drives(_game, s))
             {
                 continue;
             }
@@ -475,8 +490,8 @@ internal sealed partial class MinerWindow : QuickWindowBox
         }
         using (gui.LayoutRegion(LayoutAlgorithms.StretchLeftToRight, H28, Fixed))
         {
-            NodeCheck(gui, _fleetIds);
-            gui.Label(L.T("MiningDrone/AllShips") + "  " + FleetChecks.Count(_fleetIds, _checked) + "/" + _fleetIds.Count, W(rowW - CheckW - Gap), LeftAlign, Bold, ShrinkLabel);
+            NodeCheck(gui, _ownIds);
+            gui.Label(L.T("MiningDrone/AllShips") + "  " + FleetChecks.Count(_ownIds, _checked) + "/" + _ownIds.Count, W(rowW - CheckW - Gap), LeftAlign, Bold, ShrinkLabel);
         }
         // Each folder (header + ships) is a draggable block; drag its title to reorder profiles (↑/↓ stay).
         _sortFolders.Begin();
@@ -543,13 +558,15 @@ internal sealed partial class MinerWindow : QuickWindowBox
                 gui.Label("", W(ShipIndent));
                 bool was = _checked.Contains(id);
                 bool v = was;
-                gui.ToggleButton(ToggleButton.Style.Check, "", ref v, W(CheckW));
+                // Another player's ship (shared with us): shown with its owner, never checkable here.
+                bool ro = !World.Drives(_game, _fleet[r]);
+                gui.ToggleButton(ToggleButton.Style.Check, "", ref v, W(CheckW), ro ? Disabled : null);
                 // The text is a button too: a click anywhere on the row toggles the check.
-                if (gui.Button(_fleetText[r], W(rowW - ShipIndent - CheckW - 2f * Gap), Shrink, v ? Chosen : Lit, _fleetTips[r]))
+                if (gui.Button(_fleetText[r], W(rowW - ShipIndent - CheckW - 2f * Gap), Shrink, ro ? Disabled : v ? Chosen : Lit, _fleetTips[r]))
                 {
                     v = !v;
                 }
-                if (v != was)
+                if (v != was && !ro)
                 {
                     if (v)
                     {
@@ -582,6 +599,7 @@ internal sealed partial class MinerWindow : QuickWindowBox
     {
         _fleet.Clear();
         _fleetIds.Clear();
+        _ownIds.Clear();
         _fleetText.Clear();
         _fleetTips.Clear();
         _groups.Clear();
@@ -627,9 +645,17 @@ internal sealed partial class MinerWindow : QuickWindowBox
             string id = s.UniqueID.ToString();
             string name = s.Metadata.PlainShipName;
             g.Rows.Add(_fleet.Count);
-            g.Ids.Add(id);
             _fleet.Add(s);
             _fleetIds.Add(id);
+            if (!World.Drives(_game, s))
+            {
+                string by = L.F("MiningDrone/DrivenBy", _game.Mode.GetPlayerName(s.Metadata.PlayerIndex) ?? L.T("Misc/Unknown"));
+                _fleetText.Add(name + "\n" + by);
+                _fleetTips.Add(QuickWidgetModifiers.ToolTip(name + "\n" + by));
+                continue;
+            }
+            g.Ids.Add(id);
+            _ownIds.Add(id);
             if (c == null)
             {
                 _fleetText.Add(name);
@@ -640,7 +666,7 @@ internal sealed partial class MinerWindow : QuickWindowBox
             _fleetText.Add(name + "\n" + line2);
             _fleetTips.Add(QuickWidgetModifiers.ToolTip(name + "\n" + c.StatusText));
         }
-        _checked.IntersectWith(_fleetIds); // destroyed / given-away ships stop being targets
+        _checked.IntersectWith(_ownIds); // destroyed / given-away / other players' ships stop being targets
     }
 
     private static string ProfileName(ShipAssignment a) => Registry.DisplayName(a.Profile.Name, a.ProfileId);

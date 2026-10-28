@@ -59,7 +59,10 @@ dotnet build -c Release          # needs global tool: dotnet tool install -g Bep
   modules by priority (ties: nearer target, then profile order) > idle (follow the anchor / park at the
   offload target). A higher priority preempts only after a minimum commitment time.
 - Every action is a vanilla command or transfer sent through `NetManager.EnqueueInput`, so multiplayer stays
-  in lockstep. Only the owning client plans its ships.
+  in lockstep. Only the owning client plans its ships: the real owner (`Ship.Metadata.PlayerIndex`), even when
+  SharedShip lets teammates command a ship. Teammates see such a ship read-only ("Driven by <owner>"). A ship given
+  to another player drops the old owner's assignment quietly; the new owner may assign it. While the owner is
+  offline nobody drives the ship.
 - Mining uses `SalvageCommand`; offloading uses the same sources/sinks search as the vanilla transfer window
   and `MPMoveResourcesInput`. Asteroids in stasis are found through their stasis records; their remaining
   yield is carried over when a mined rock re-enters stasis, so empty rocks are not revisited.

@@ -6,6 +6,7 @@ MiningDrone
 	ShowCircles = "Show mining area circles"
 	AllShips = "All ships"
 	GroupUnmanaged = "Not in autofleet"
+	DrivenBy = "Driven by {0}"
 	FromGameSelection = "From game selection"
 	TipFromGameSelection = "Check exactly the ships selected in the game"
 	TipFolderUp = "Move this profile up (same order in Profiles)"

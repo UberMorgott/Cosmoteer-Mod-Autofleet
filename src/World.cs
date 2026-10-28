@@ -1616,6 +1616,9 @@ internal static partial class World
         return queued;
     }
     /// <summary>Own or allied (Mode.AreAllies) ship with the given ObjectID string; allies are valid offload sinks in vanilla.</summary>
+    /// <summary>Whether this client drives <paramref name="s"/>: the synced owner (Metadata.PlayerIndex) is the local player.</summary>
+    public static bool Drives(GameRoot game, Ship s) => Drives(s.Metadata.PlayerIndex, game.LocalPlayerIndex);
+
     public static Ship? FindFriendlyShip(GameRoot game, string id, Ship? except)
     {
         SimRoot sim = game.Sim;

@@ -6,6 +6,7 @@ MiningDrone
 	ShowCircles = "Abbaugebiet-Kreise anzeigen"
 	AllShips = "Alle Schiffe"
 	GroupUnmanaged = "Nicht in Autofleet"
+	DrivenBy = "Gesteuert von {0}"
 	FromGameSelection = "Aus Spielauswahl"
 	TipFromGameSelection = "Genau die im Spiel ausgewählten Schiffe abhaken"
 	TipFolderUp = "Profil nach oben (gleiche Reihenfolge in Profile)"

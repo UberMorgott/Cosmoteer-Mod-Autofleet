@@ -6,6 +6,7 @@ MiningDrone
 	ShowCircles = "Afficher les zones d'extraction"
 	AllShips = "Tous les vaisseaux"
 	GroupUnmanaged = "Hors de l'autofleet"
+	DrivenBy = "Piloté par {0}"
 	FromGameSelection = "Depuis la sélection du jeu"
 	TipFromGameSelection = "Cocher exactement les vaisseaux sélectionnés dans le jeu"
 	TipFolderUp = "Monter ce profil (même ordre dans Profils)"

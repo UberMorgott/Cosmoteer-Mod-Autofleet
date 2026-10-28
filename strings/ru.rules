@@ -6,6 +6,7 @@ MiningDrone
 	ShowCircles = "Показывать зоны добычи"
 	AllShips = "Все корабли"
 	GroupUnmanaged = "Не в автофлоте"
+	DrivenBy = "Управляет {0}"
 	FromGameSelection = "Из выделения игры"
 	TipFromGameSelection = "Отметить ровно корабли, выделенные в игре"
 	TipFolderUp = "Поднять профиль (тот же порядок в «Профилях»)"

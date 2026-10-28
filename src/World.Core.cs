@@ -19,6 +19,11 @@ internal static partial class World
     /// <summary>Loot source bits (AgentConfig.LootKinds).</summary>
     public const int KindWreck = 1, KindCache = 2, KindDerelict = 4;
 
+    /// <summary>Only the ship's real owner drives it (SharedShip makes teammates' ships commandable, so the vanilla
+    /// commandable check would let two clients drive one ship). -4 = "play as everyone" (creative), as in vanilla
+    /// CommandManager.IsCommandableBy. An offline owner's ships are driven by nobody.</summary>
+    internal static bool Drives(int owner, int local) => local == -4 || owner == local;
+
     public static int KindBit(JunkKind k) => k == JunkKind.None ? 0 : 1 << ((int)k - 1);
 
     /// <summary>Exactly one kind per junk ship: abandoned provenance wins over storage-pod provenance; the rest are wrecks.

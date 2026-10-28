@@ -6,6 +6,7 @@ MiningDrone
 	ShowCircles = "採掘エリアの円を表示"
 	AllShips = "全ての船"
 	GroupUnmanaged = "Autofleet外"
+	DrivenBy = "{0} が操作中"
 	FromGameSelection = "ゲームの選択から"
 	TipFromGameSelection = "ゲームで選択中の船だけをチェックします"
 	TipFolderUp = "このプロファイルを上へ（プロファイルの並び順と共通）"

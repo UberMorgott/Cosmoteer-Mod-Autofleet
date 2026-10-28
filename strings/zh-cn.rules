@@ -6,6 +6,7 @@ MiningDrone
 	ShowCircles = "显示开采区域圆圈"
 	AllShips = "所有星舰"
 	GroupUnmanaged = "不在自动舰队中"
+	DrivenBy = "由 {0} 控制"
 	FromGameSelection = "按游戏中的选择"
 	TipFromGameSelection = "仅勾选游戏中当前选中的星舰"
 	TipFolderUp = "上移此配置（在“配置”中顺序相同）"

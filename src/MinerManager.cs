@@ -207,7 +207,7 @@ internal static class MinerManager
     public static void ApplyKeepMin(GameRoot game, Ship ship, ShipAssignment a)
     {
         var keep = a.Cargo.KeepMin;
-        if (keep == null || keep.Count == 0 || !ship.IsLocalPlayerShip)
+        if (keep == null || keep.Count == 0 || !World.Drives(game, ship))
         {
             return;
         }
@@ -225,9 +225,7 @@ internal static class MinerManager
     {
         if (AgentsByShip.TryGetValue(ship, out var c))
         {
-            c.Assignment.Enabled = false;
-            c.Assignment.UserPaused = false;
-            c.Assignment.Temp = TempIntent.None;
+            c.Assignment.Disable();
             if (_game != null)
             {
                 c.Stop(_game);
@@ -257,13 +255,14 @@ internal static class MinerManager
         sim.Doodads.AddMinimapDoodad(Icons.Minimap);
         _drawFailed = false;
 
-        // Restore automation for this player's ships that were enabled when saved.
+        // Restore automation for the ships this player owns that were enabled when saved (SharedShip adds teammates'
+        // shared ships to LocalPlayerShips; those are not ours to drive).
         var own = sim.Ships.LocalPlayerShips;
         for (int i = 0; i < own.Count; i++)
         {
             Ship s = own[i];
             ShipAssignment? a = Store.Find(s.UniqueID.ToString());
-            if (a != null && a.Enabled)
+            if (a != null && a.Enabled && World.Drives(game, s))
             {
                 var c = new ShipAgent(s, s.UniqueID.ToString(), a);
                 AgentsByShip[s] = c;
@@ -293,9 +292,18 @@ internal static class MinerManager
             ShipAgent c = Agents[i];
             try
             {
-                // Only the owner's client drives a ship (lockstep MP: others just receive the inputs).
-                if (!c.Ship.ExistsInSim(sim) || !c.Ship.IsLocalPlayerShip)
+                if (!c.Ship.ExistsInSim(sim))
                 {
+                    Removed.Add(c);
+                    continue;
+                }
+                // Only the owner's client drives a ship (lockstep MP: others just receive the inputs). Ownership moved
+                // (transfer / SharedShip take): the assignment is dropped quietly, no Stop/Release inputs for a ship
+                // that is no longer ours.
+                if (!World.Drives(game, c.Ship))
+                {
+                    c.Assignment.Disable();
+                    Store.Touch(c.Assignment);
                     Removed.Add(c);
                     continue;
                 }

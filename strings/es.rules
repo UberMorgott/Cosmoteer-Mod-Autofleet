@@ -6,6 +6,7 @@ MiningDrone
 	ShowCircles = "Mostrar círculos de zonas mineras"
 	AllShips = "Todas las naves"
 	GroupUnmanaged = "Fuera de Autofleet"
+	DrivenBy = "Lo controla {0}"
 	FromGameSelection = "Desde la selección del juego"
 	TipFromGameSelection = "Marcar exactamente las naves seleccionadas en el juego"
 	TipFolderUp = "Subir este perfil (mismo orden en Perfiles)"
