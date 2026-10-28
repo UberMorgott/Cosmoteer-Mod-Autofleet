@@ -1122,6 +1122,36 @@ internal static partial class World
         return bestD < 100f ? best : null;
     }
 
+    /// <summary>
+    /// Bounding circles (inflated by <paramref name="pad"/>) of every body other than us and <paramref name="skip"/> that
+    /// crosses the segment a->b: the whole cluster in the way, as routing obstacles. Circles containing a or b are left
+    /// out (the router skips them too, ShipAgent.PushObstacles).
+    /// </summary>
+    public static void CorridorBodies(SimRoot sim, Ship ship, Vector2 a, Vector2 b, float pad, Ship? skip, List<Circle> into)
+    {
+        into.Clear();
+        ShipBuffer.Clear();
+        sim.Ships.DetFindIntersectingWith(new Circle((a + b) * 0.5f, a.DistanceTo(b) * 0.5f + pad), ShipBuffer, approximate: true, junk: true);
+        Vector2 d = b - a;
+        float len2 = d.LengthSquared;
+        for (int i = 0; i < ShipBuffer.Count; i++)
+        {
+            Ship s = ShipBuffer[i];
+            if (s == ship || s == skip || s.Parts.Count == 0)
+            {
+                continue;
+            }
+            Circle c = s.WorldBoundingCircle;
+            c = new Circle(c.Center, c.Radius + pad);
+            float t = len2 > 0f ? Math.Clamp(((c.Center.X - a.X) * d.X + (c.Center.Y - a.Y) * d.Y) / len2, 0f, 1f) : 0f;
+            if (!c.Contains(a) && !c.Contains(b) && (a + d * t).DistanceTo(c.Center) < c.Radius)
+            {
+                into.Add(c);
+            }
+        }
+        ShipBuffer.Clear();
+    }
+
     /// <summary>World center of the part of <paramref name="s"/> nearest to <paramref name="from"/>.</summary>
     public static Vector2? NearestPartCenter(Ship s, Vector2 from)
     {

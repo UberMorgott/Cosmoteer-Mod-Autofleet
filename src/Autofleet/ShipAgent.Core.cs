@@ -50,6 +50,36 @@ internal sealed partial class ShipAgent
         return Math.Max(edge, need);
     }
 
+    /// <summary>
+    /// Goal-progress watchdog of a travel leg: the gap to the leg's goal must shrink by <c>minGain</c> (cumulative from
+    /// the last counted best) within <c>window</c> ms. Back-and-forth motion (vanilla avoidance flipping sides) moves the
+    /// hull but never closes the gap, so it stalls here even though the displacement watchdog sees movement. A new leg
+    /// (another command) or a goal anchor that itself moved by <c>minGain</c> (a followed ship travelling) starts over.
+    /// </summary>
+    internal struct GoalProgress
+    {
+        private bool _set;
+        private float _ax, _ay, _best;
+        private long _bestAt;
+
+        /// <summary>True when the gap has not improved by minGain for longer than window.</summary>
+        public bool Stalled(bool newLeg, float ax, float ay, float gap, long now, float minGain, long window)
+        {
+            float dx = ax - _ax, dy = ay - _ay;
+            if (!_set || newLeg || dx * dx + dy * dy > minGain * minGain)
+            {
+                this = new GoalProgress { _set = true, _ax = ax, _ay = ay, _best = gap, _bestAt = now };
+                return false;
+            }
+            if (gap <= _best - minGain)
+            {
+                _best = gap;
+                _bestAt = now;
+            }
+            return now - _bestAt > window;
+        }
+    }
+
     /// <summary>Hire budget: credits above the floor not already promised to an unsettled hire.</summary>
     internal static int HireBudget(int spendable, int floor, int reserved) => Math.Max(0, spendable - floor - reserved);
 

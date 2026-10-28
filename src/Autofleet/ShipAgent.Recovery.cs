@@ -57,7 +57,7 @@ internal sealed partial class ShipAgent
             case MinerState.CollectLoose:
                 return c is MoveCommand;
             case MinerState.Mining:
-                return _resalvageAfterMove || (Target != null && c is SalvageCommand && Ship.WorldBoundingCircle.DistanceTo(Target.WorldBoundingCircle) > 400f);
+                return _resalvageAfterMove || (_routed && c is MoveCommand) || (Target != null && c is SalvageCommand && Ship.WorldBoundingCircle.DistanceTo(Target.WorldBoundingCircle) > 400f);
             case MinerState.Holding:
                 return _followShip != null && FollowGap(c, _followShip) > 2000f;
             case MinerState.Trading:
@@ -85,17 +85,28 @@ internal sealed partial class ShipAgent
                 _stuckRefAt = now;
                 return false;
             }
+            bool stalled = GoalStalled(now);
             float moved = pos.DistanceTo(_stuckRef);
             if (moved >= StuckMinMove)
             {
                 _moveDir = (pos - _stuckRef) * (1f / moved);
                 _stuckRef = pos;
                 _stuckRefAt = now;
-                return false;
             }
-            if (now - _stuckRefAt < StuckWindowMs)
+            if (now - _stuckRefAt < StuckWindowMs && !stalled)
             {
                 return false;
+            }
+            object? goal = (object?)Target ?? _travelDest ?? (object?)_followShip;
+            if (!Equals(goal, _stuckGoal))
+            {
+                _stuckGoal = goal;
+                _stuckCycles = 0; // the give-up budget belongs to one logical goal, kept across re-plans and re-issues
+            }
+            if (now - _stuckRefAt < StuckWindowMs && World.TouchingBody(game.Sim, Ship) == null)
+            {
+                Oscillating(game, now, pos);
+                return true;
             }
             _stuckActive = true;
             _stuckStep = 0;
@@ -126,6 +137,69 @@ internal sealed partial class ShipAgent
         RunStuckStep(game, now, pos);
         return true;
     }
+
+    private const long GoalWindowMs = 20_000;
+    private GoalProgress _goalProgress;
+    private Command? _goalCmd;
+    private Vector2 _goalEnd;
+    private object? _stuckGoal;
+
+    /// <summary>Gap to the active leg's goal: the followed ship (slot point / hull gap, BaseFollowCommand covers salvage,
+    /// attack, follow) or the command's destination. Its own GetDestination is not used for follows: it orbits with our
+    /// position (BaseFollowCommand.GetDestination), so an oscillating hull would keep moving it.</summary>
+    private bool GoalStalled(long now)
+    {
+        Command c = Ship.Commands.CurDisplayedCommand!; // Travelling() checked it
+        Vector2 anchor;
+        float gap;
+        if (c is BaseFollowCommand { HasTarget: true } bf)
+        {
+            anchor = bf.Target.WorldCenter;
+            gap = FollowGap(c, bf.Target);
+        }
+        else
+        {
+            anchor = c.GetDestination().Location;
+            gap = Ship.WorldCenter.DistanceTo(anchor);
+        }
+        _goalEnd = anchor;
+        bool newLeg = !ReferenceEquals(c, _goalCmd);
+        _goalCmd = c;
+        return _goalProgress.Stalled(newLeg, anchor.X, anchor.Y, gap, now, StuckMinMove, GoalWindowMs);
+    }
+
+    /// <summary>
+    /// Moving but not closing on the goal, hull free: vanilla local avoidance flips sides in front of a cluster of
+    /// bodies (Command.AdjustDesiredDestForAvoidance picks the side per tick). Reverse/sidestep would not help; every
+    /// body across the corridor becomes an avoidance circle so Route plans explicit waypoints around the whole cluster
+    /// (the side is then ours, vanilla only steers locally). Second stall on the same goal, or nothing routable: give it up.
+    /// </summary>
+    private void Oscillating(GameRoot game, long now, Vector2 pos)
+    {
+        _stuckFrom = State;
+        _stuckBody = null;
+        _stuckCycles++;
+        Vector2 end = _goalEnd; // the active leg (a routed waypoint, or the goal itself)
+        int before = _obstacles.Count;
+        if (_stuckCycles < 2)
+        {
+            World.CorridorBodies(game.Sim, Ship, pos, end, Ship.WorldBoundingRadius + 200f, Target, Corridor);
+            foreach (Circle c in Corridor)
+            {
+                _obstacles.Add((c, now + 300_000));
+            }
+        }
+        Log.Info($"[{Id}] stuck: no progress toward the goal in {GoalWindowMs / 1000} s during {State} while moving (avoidance oscillating); {_obstacles.Count - before} body circle(s) across the path; cycle {_stuckCycles}");
+        if (_obstacles.Count == before)
+        {
+            GiveUpStuckTarget(now);
+            return;
+        }
+        EndStuck();
+        ResumeAfterStuck(L.T("MiningDrone/StuckReplan"));
+    }
+
+    private static readonly List<Circle> Corridor = new();
 
     private void RunStuckStep(GameRoot game, long now, Vector2 pos)
     {
@@ -319,6 +393,7 @@ internal sealed partial class ShipAgent
         _stuckStep = 0;
         _stuckRef = Ship.WorldCenter;
         _stuckRefAt = _now;
+        _goalCmd = null; // recovery is over: the next leg's progress starts over
     }
 
     // ------------------------------------------------------------------ provenance
