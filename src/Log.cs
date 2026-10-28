@@ -19,6 +19,9 @@ internal static class Log
         _path = Path.Combine(ModFolder, "Autofleet.log");
         try
         {
+            // Keep the previous session's log: a bug report usually arrives after the game was restarted.
+            if (File.Exists(_path))
+                File.Copy(_path, Path.Combine(ModFolder, "Autofleet.prev.log"), overwrite: true);
             File.WriteAllText(_path, $"[{DateTime.Now:HH:mm:ss}] Autofleet log start{Environment.NewLine}");
         }
         catch
