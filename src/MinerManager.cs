@@ -221,6 +221,29 @@ internal static class MinerManager
         }
     }
 
+    /// <summary>Profile collect template edit -> every commandable ship on the profile (automated or not): only the
+    /// <paramref name="toggled"/> types, as vanilla bans, so the ships' other ban tweaks survive.</summary>
+    public static void PushTemplate(GameRoot game, Profile p, ulong toggled)
+    {
+        if (toggled == 0 || game.Sim is not { } sim)
+        {
+            return;
+        }
+        ulong target = World.StackableMask & ~World.CollectMask(p.Cargo.Collect);
+        foreach (ShipAssignment a in Store.Assignments.Values)
+        {
+            if (a.ProfileId == p.Id && World.FindShipById(sim, a.ShipId) is Ship s)
+            {
+                World.SetBans(game, s, toggled, target);
+            }
+        }
+    }
+
+    /// <summary>Explicit assignment to <paramref name="p"/>: one-time copy of its template into the ship's vanilla bans
+    /// (only differing types are sent). Never on load/reconcile: existing bans stay until the player assigns.</summary>
+    public static void CopyTemplate(GameRoot game, Ship ship, Profile p) =>
+        World.SetBans(game, ship, World.StackableMask, World.StackableMask & ~World.CollectMask(p.Cargo.Collect));
+
     public static void Unassign(Ship ship)
     {
         if (AgentsByShip.TryGetValue(ship, out var c))

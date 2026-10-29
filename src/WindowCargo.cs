@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Cosmoteer.Data;
 using Cosmoteer.Resources;
 using Cosmoteer.Ships;
 using Halfling;
@@ -33,9 +34,36 @@ internal sealed partial class MinerWindow
         return _profileCargo;
     }
 
+    /// <summary>The checked ships' vanilla ban sets (the effective collect filter, shared with the game's resource window).</summary>
+    private sealed class ShipScope : CargoScope
+    {
+        public List<Ship> Ships = null!;
+
+        public override int Count => Ships.Count;
+
+        public override bool Collects(int s, string rid) => !Ships[s].Metadata.IsResourceTypeBanned(new ID<ResourceRules>(rid));
+    }
+
+    private readonly ShipScope _shipCargo = new();
+
     private void DrawResources(QuickGui gui, float colW, CargoScope sc)
     {
         // Two separate sections: what to collect (Collect) vs what to keep aboard when offloading (KeepMin/KeepAll).
+        ResourceRules[] all = DrawCollect(gui, colW, sc, "MiningDrone/SecCollectHint");
+        DrawPriority(gui, sc, all, colW);
+        DrawCargoTable(gui, sc, all, colW);
+        DrawSurplusTable(gui, sc, all, colW);
+    }
+
+    /// <summary>Per-ship collect grid of Флот: edits the selected ships' vanilla bans only (no profile change).</summary>
+    private void DrawShipCollect(QuickGui gui, float colW)
+    {
+        _shipCargo.Ships = _ships;
+        DrawCollect(gui, colW, _shipCargo, "MiningDrone/SecCollectShipHint");
+    }
+
+    private ResourceRules[] DrawCollect(QuickGui gui, float colW, CargoScope sc, string hintKey)
+    {
         ResourceRules[] all = World.Resources;
         if (!ReferenceEquals(all, _tipsFor))
         {
@@ -55,15 +83,13 @@ internal sealed partial class MinerWindow
         }
         if (FoldHeader(gui, "MiningDrone/SecCollect", colW))
         {
-            gui.Label(L.T("MiningDrone/SecCollectHint"), AutoH, LeftAlign, Wrap);
+            gui.Label(L.T(hintKey), AutoH, LeftAlign, Wrap);
             ulong ast = World.AsteroidGroupMask;
             DrawGroup(gui, sc, all, ast, "MiningDrone/GroupAsteroid", ast, "MiningDrone/WarnNoOre", colW);
             // Loot picks up any selected stackable (ore included), so its warning checks the whole mask.
             DrawGroup(gui, sc, all, World.StackableMask & ~ast, "MiningDrone/GroupSpace", World.StackableMask, "MiningDrone/WarnNoLoot", colW);
         }
-        DrawPriority(gui, sc, all, colW);
-        DrawCargoTable(gui, sc, all, colW);
-        DrawSurplusTable(gui, sc, all, colW);
+        return all;
     }
 
     private readonly List<string> _prioShown = new();
@@ -437,16 +463,12 @@ internal sealed partial class MinerWindow
         }
     }
 
-    /// <summary>True when the policy collects at least one resource of the group (null Collect = all).</summary>
-    private static bool AnySelected(List<string>? sel, ResourceRules[] all, ulong group)
+    /// <summary>True when unit <paramref name="s"/> collects at least one resource of the group.</summary>
+    private static bool AnySelected(CargoScope sc, int s, ResourceRules[] all, ulong group)
     {
-        if (sel == null)
-        {
-            return true;
-        }
         for (int i = 0; i < all.Length && i < 64; i++)
         {
-            if ((group & (1UL << i)) != 0 && all[i].Icon != null && sel.Contains(all[i].ID.ToString()))
+            if ((group & (1UL << i)) != 0 && all[i].Icon != null && sc.Collects(s, all[i].ID.ToString()))
             {
                 return true;
             }
@@ -459,8 +481,7 @@ internal sealed partial class MinerWindow
         int k = 0;
         for (int i = 0; i < sc.Count; i++)
         {
-            List<string>? sel = sc.Read(i).Collect;
-            if (sel == null || sel.Contains(rid))
+            if (sc.Collects(i, rid))
             {
                 k++;
             }
@@ -487,7 +508,7 @@ internal sealed partial class MinerWindow
         int none = 0;
         for (int s = 0; s < n && total > 0; s++)
         {
-            if (!AnySelected(sc.Read(s).Collect, all, warnGroup))
+            if (!AnySelected(sc, s, all, warnGroup))
             {
                 none++;
             }
@@ -501,11 +522,11 @@ internal sealed partial class MinerWindow
         {
             if (gui.Button(L.T("MiningDrone/SelectAll"), b2, Shrink))
             {
-                SetGroup(sc, all, group, true);
+                SetCollect(sc, all, group, true, "group select-all");
             }
             if (gui.Button(L.T("MiningDrone/SelectNone"), b2, Shrink))
             {
-                SetGroup(sc, all, group, false);
+                SetCollect(sc, all, group, false, "group select-none");
             }
         }
         using (gui.LayoutRegion(_grid, AutoH, FixedWidth))
@@ -523,13 +544,7 @@ internal sealed partial class MinerWindow
                 IQuickWidgetModifier<Widget>? tip = k > 0 && k < n ? PartialTip(i, k, n, r) : _tips[i];
                 if (gui.ImageButton("", r.Icon, IconSize, look, tip))
                 {
-                    bool turnOn = k < n; // all -> off; none/partial -> on for all
-                    for (int s = 0; s < n; s++)
-                    {
-                        CargoPolicy cp = sc.Write(s);
-                        SetOne(cp, all, rid, turnOn);
-                        LogIfEmpty(sc, s, cp, "icon " + rid);
-                    }
+                    SetCollect(sc, all, 1UL << i, k < n, "icon " + rid); // all -> off; none/partial -> on for all
                 }
             }
         }
@@ -546,20 +561,29 @@ internal sealed partial class MinerWindow
         return m;
     }
 
-    private static void SetGroup(CargoScope sc, ResourceRules[] all, ulong group, bool on)
+    /// <summary>Turns the <paramref name="bits"/> types on/off. Ships: their vanilla bans only. Profile: the template, and
+    /// only the types it actually toggled are pushed to the profile's ships as bans (MinerManager.PushTemplate).</summary>
+    private void SetCollect(CargoScope sc, ResourceRules[] all, ulong bits, bool on, string source)
     {
-        for (int s = 0; s < sc.Count; s++)
+        if (sc is ShipScope ships)
         {
-            CargoPolicy cp = sc.Write(s);
-            for (int i = 0; i < all.Length && i < 64; i++)
+            for (int s = 0; s < ships.Count; s++)
             {
-                if ((group & (1UL << i)) != 0)
-                {
-                    SetOne(cp, all, all[i].ID.ToString(), on);
-                }
+                World.SetBans(_game, ships.Ships[s], bits, on ? 0 : ulong.MaxValue);
             }
-            LogIfEmpty(sc, s, cp, "group select-none");
+            return;
         }
+        CargoPolicy cp = sc.Write(0);
+        ulong before = World.CollectMask(cp.Collect);
+        for (int i = 0; i < all.Length && i < 64; i++)
+        {
+            if ((bits & (1UL << i)) != 0)
+            {
+                SetOne(cp, all, all[i].ID.ToString(), on);
+            }
+        }
+        LogIfEmpty(sc, 0, cp, source);
+        MinerManager.PushTemplate(_game, sc.Profile, before ^ World.CollectMask(cp.Collect));
     }
 
     private static void SetOne(CargoPolicy cp, ResourceRules[] all, string rid, bool on)

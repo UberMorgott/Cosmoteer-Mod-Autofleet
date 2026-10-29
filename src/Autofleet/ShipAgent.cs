@@ -353,10 +353,10 @@ internal sealed partial class ShipAgent
             // The restored owner came from the save, the config is the live profile: if that module is off now,
             // force the re-plan below so its command is stopped instead of resumed.
             _lastSig = OwnerInactive() ? int.MinValue : PlanSig();
-            _planMask = OwnSalvageStale() ? ~Harvest : Harvest; // saved with another Collect filter: re-plan below
+            _planMask = OwnSalvageStale() ? ~Harvest : Harvest; // saved with another collect filter: re-plan below
         }
 
-        // Collect filter changed (live profile edit): the running salvage keeps its old auto-collect set, so a
+        // Collect filter changed (vanilla ban edit, ours or the game's window): the running salvage keeps its old auto-collect set, so a
         // harvesting owner stops its own command and re-plans with the new one.
         bool collectChanged = _planMask is ulong pm && pm != Harvest;
         _planMask = Harvest;
@@ -2079,8 +2079,7 @@ internal sealed partial class ShipAgent
 
     // ------------------------------------------------------------------ filters / blacklists
 
-    private List<string>? _maskFor;
-    private int _maskVersion = int.MinValue;
+    private ulong _bannedSeen; // vanilla ban set as a mask (World.BannedMask): content change signal
     private float _escortDist = float.NaN;
     private float _escortAngle = float.NaN;
 
@@ -2111,7 +2110,7 @@ internal sealed partial class ShipAgent
     private ulong? _planMask;
     private ulong _maxMask; // collected types at/above keep-max (Logistics.AtMaxMask), refreshed every tick
 
-    /// <summary>Types automatic harvesting takes now: the Collect filter minus types at keep-max. A change re-plans a
+    /// <summary>Types automatic harvesting takes now: the vanilla ban filter (unbanned types) minus types at keep-max. A change re-plans a
     /// running harvest (its salvage auto-collect set is stale).</summary>
     private ulong Harvest => _mask & ~_maxMask;
 
@@ -2124,29 +2123,20 @@ internal sealed partial class ShipAgent
 
     private void RefreshMask()
     {
+        // Effective filter = the ship's vanilla ban set (shared with the game's resource window; the profile's Collect is
+        // only a template pushed as bans). The set is mutated in place, so its content mask is the change signal.
         // Priority ranks follow the live profile; a reorder applies from the next target pick (no forced re-plan, D18).
-        if (_ranksVersion != Cfg.Compiles)
+        ulong banned = World.BannedMask(Ship);
+        if (_ranksVersion != Cfg.Compiles || banned != _bannedSeen)
         {
             _ranksVersion = Cfg.Compiles;
-            _ranks = World.RankTable(Cfg.CollectPriority, Cfg.Collect == null ? World.StackableMask : World.MaskFromIds(Cfg.Collect));
-        }
-        // No allocation per tick: recomputed only when the cargo policy object or the config changes.
-        if (Cfg.Collect == null)
-        {
-            _mask = World.StackableMask; // default: everything selected
-            _maskFor = null;
-            return;
-        }
-        // Profile edits change the Collect list in place: key on every recompile, not only the list identity.
-        if (!ReferenceEquals(_maskFor, Cfg.Collect) || _maskVersion != Cfg.Compiles)
-        {
-            _mask = World.MaskFromIds(Cfg.Collect);
-            _maskFor = Cfg.Collect;
-            _maskVersion = Cfg.Compiles;
+            _bannedSeen = banned;
+            _mask = World.StackableMask & ~banned;
+            _ranks = World.RankTable(Cfg.CollectPriority, _mask);
         }
     }
 
-    /// <summary>One of our queued salvage commands auto-collects a different set than the live Collect filter.</summary>
+    /// <summary>One of our queued salvage commands auto-collects a different set than the live ban filter.</summary>
     private bool OwnSalvageStale()
     {
         HashSet<ID<ResourceRules>>? want = null;

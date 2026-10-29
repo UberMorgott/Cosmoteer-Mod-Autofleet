@@ -91,6 +91,29 @@ internal static partial class World
         return mask;
     }
 
+    /// <summary>A profile collect template as a mask (null = every stackable type).</summary>
+    public static ulong CollectMask(List<string>? collect) => collect == null ? StackableMask : MaskFromIds(collect);
+
+    /// <summary>The ship's vanilla ban set as a mask = the effective collect filter (null set = nothing banned).
+    /// Local view (MPSetResourceBannedInput applies at once on the sender): owner-side planning only.</summary>
+    public static ulong BannedMask(Ship ship) => MaskOf(ship.Metadata.BannedResourceTypes, IndexOf);
+
+    /// <summary>Sends the ban inputs that move <paramref name="ship"/> to <paramref name="target"/> within
+    /// <paramref name="scope"/> (owner client only; the game state changes only through the input).</summary>
+    public static void SetBans(GameRoot game, Ship ship, ulong scope, ulong target)
+    {
+        if (!Drives(game, ship))
+        {
+            return;
+        }
+        EnsureResources();
+        for (ulong m = BanInputs(BannedMask(ship), target, scope); m != 0; m &= m - 1)
+        {
+            int i = System.Numerics.BitOperations.TrailingZeroCount(m);
+            game.NetManager.EnqueueInput(new MPSetResourceBannedInput(ship, _resources[i].ID, (target & (1UL << i)) != 0));
+        }
+    }
+
     private static readonly ID<SimObjectSpawner> AsteroidTag = new("asteroid");
     private static ulong _asteroidGroupMask;
     private static ulong _stackableMask;

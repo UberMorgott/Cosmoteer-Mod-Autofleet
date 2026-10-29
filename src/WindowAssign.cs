@@ -46,6 +46,8 @@ internal sealed partial class MinerWindow
             gui.MenuSeparator();
             DrawProfilePick(gui, colW);
             gui.MenuSeparator();
+            DrawShipCollect(gui, colW);
+            gui.MenuSeparator();
             DrawBindings(gui, sim, colW);
             gui.MenuSeparator();
             DrawFleetJump(gui);
@@ -194,6 +196,7 @@ internal sealed partial class MinerWindow
                 for (int i = 0; i < _asg.Count; i++)
                 {
                     Store.SetProfile(_asg[i], p); // keep-on-board follows via MinerManager.SyncKeep
+                    MinerManager.CopyTemplate(_game, _ships[i], p); // collect template -> vanilla bans, once
                 }
                 Store.Prefs.LastProfileId = p.Id;
                 Store.MarkPrefs();

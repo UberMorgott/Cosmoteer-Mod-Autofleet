@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace MiningDrone;
 
@@ -41,6 +42,30 @@ internal static partial class World
 
     internal static Verdict StasisVerdict(ulong known, bool complete, ulong want) =>
         (known & want) != 0 ? Verdict.Confirmed : complete ? Verdict.Reject : Verdict.Maybe;
+
+    /// <summary>Bit per resource index of <paramref name="set"/> (unknown / index >= 64 skipped). The vanilla ban set is
+    /// edited in place (MPSetResourceBannedInput), so its content, not its reference, is the change signal.</summary>
+    internal static ulong MaskOf<T>(HashSet<T>? set, Func<T, int> index)
+    {
+        ulong m = 0;
+        if (set != null)
+        {
+            foreach (T x in set)
+            {
+                int i = index(x);
+                if (i is >= 0 and < 64)
+                {
+                    m |= 1UL << i;
+                }
+            }
+        }
+        return m;
+    }
+
+    /// <summary>Types whose ban input moves a ship from <paramref name="banned"/> to <paramref name="target"/>, limited to
+    /// <paramref name="scope"/> (template toggle: only the toggled types, so other per-ship tweaks survive; assignment:
+    /// every stackable type).</summary>
+    internal static ulong BanInputs(ulong banned, ulong target, ulong scope) => (banned ^ target) & scope;
 
     /// <summary>Distance floor of the priority cost: next to a low-rank target a higher rank still wins within ~1.7 km.</summary>
     public const float PriorityK = 1000f * 1000f;

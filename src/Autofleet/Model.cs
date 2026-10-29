@@ -206,7 +206,8 @@ internal sealed class ArbitrationSettings : Extensible
 /// </summary>
 internal sealed class CargoPolicy : Extensible
 {
-    /// <summary>Collect filter. null = everything; explicit list otherwise (empty = nothing).</summary>
+    /// <summary>Collect template (not the effective filter: that is each ship's vanilla ban set). Toggles are pushed to the
+    /// profile's ships as bans, an explicit assignment copies it once. null = everything; empty = nothing.</summary>
     public List<string>? Collect { get; set; }
 
     /// <summary>Collect priority, high to low (D18). null/empty = nearest target (no priority); selected types not listed

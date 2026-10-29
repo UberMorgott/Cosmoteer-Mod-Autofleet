@@ -4,13 +4,17 @@ using MiningDrone.Autofleet;
 
 namespace MiningDrone;
 
-/// <summary>The profile whose cargo policy the cargo editor edits (live for all its ships; no per-ship cargo).</summary>
-internal sealed class CargoScope
+/// <summary>The profile whose cargo policy the cargo editor edits (live for all its ships). The collect grid is also
+/// drawn per ship over the vanilla ban sets (MinerWindow.ShipScope overrides Count/Collects).</summary>
+internal class CargoScope
 {
     public Profile Profile = null!;
 
-    // shortcut: indexed Count/Read/Write are left from the removed multi-ship scope (always one policy); fold into Profile if the editor is reworked.
-    public int Count => 1;
+    // shortcut: indexed Read/Write are left from the removed multi-ship scope (always one policy); fold into Profile if the editor is reworked.
+    public virtual int Count => 1;
+
+    /// <summary>Unit <paramref name="s"/> collects <paramref name="rid"/> (profile template: null Collect = all).</summary>
+    public virtual bool Collects(int s, string rid) => Profile.Cargo.Collect is not { } c || c.Contains(rid);
 
     public CargoPolicy Read(int i) => Profile.Cargo;
 

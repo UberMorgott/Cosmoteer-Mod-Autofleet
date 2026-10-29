@@ -71,7 +71,6 @@ internal sealed class AgentConfig
     public float ZoneX, ZoneY, ZoneR;
     public TempIntent Temp;
 
-    public List<string>? Collect;
     public List<string>? CollectPriority;
     public List<string>? KeepAll;
 
@@ -328,7 +327,6 @@ internal static class Resolver
         c.OffloadId = off ?? (s.Defaults.OffloadToAnchor && anchorBound ? c.AnchorId : null);
         c.Temp = a.Temp;
         CargoPolicy cargo = a.Cargo;
-        c.Collect = cargo.Collect;
         c.CollectPriority = cargo.CollectPriority;
         c.KeepAll = cargo.KeepAll;
         Logistics.Problems(cargo, c.Blockers);
