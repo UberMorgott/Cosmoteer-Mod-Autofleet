@@ -29,6 +29,15 @@ internal sealed partial class ShipAgent
         return whole <= 0 ? 1f : Math.Clamp((partsValue - repairCost) / (float)whole, 0f, 1f);
     }
 
+    /// <summary>Hold fill in cells, the one number shown and compared with the threshold: used / available (no
+    /// available cells: full when the ship has a hold at all).</summary>
+    internal static float CellFill(int used, int avail, int total) =>
+        avail > 0 ? Math.Min(1f, (float)used / avail) : (total > 0 ? 1f : 0f);
+
+    /// <summary>Whole percent of the shown cells, rounded down so 100% appears only when every available cell is used.</summary>
+    internal static int CellPercent(int used, int avail, int total) =>
+        avail > 0 ? Math.Clamp(used * 100 / avail, 0, 100) : (total > 0 ? 100 : 0);
+
     /// <summary>Hull value at which a damage retreat ends (hysteresis over the trigger).</summary>
     internal static float DamageRecover(float enter) => Math.Min(1f, Math.Max(0.9f, enter + 0.05f));
 

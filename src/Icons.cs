@@ -114,9 +114,7 @@ internal static class Icons
         DrawIcon(sprite, rect, isMove, Color.White);
         if (Store.Prefs.ShowCargoPercent && ShowsPercent(c.State))
         {
-            int p = (int)Math.Round(c.Fill * 100f);
-            p = p < 0 ? 0 : (p > 100 ? 100 : p);
-            BaseSelectionState.DrawText(new Vector2(rect.Right + 4f, iconCenter.Y), Pct[p], HAlignment.Left, VAlignment.Center, background: true);
+            BaseSelectionState.DrawText(new Vector2(rect.Right + 4f, iconCenter.Y), Pct[c.Percent], HAlignment.Left, VAlignment.Center, background: true);
             App.Graphics.SetToMaterial(null);
         }
         if (rect.Contains(mouse))

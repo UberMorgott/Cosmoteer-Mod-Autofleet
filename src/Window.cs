@@ -662,7 +662,7 @@ internal sealed partial class MinerWindow : QuickWindowBox
                 _fleetTips.Add(QuickWidgetModifiers.ToolTip(name));
                 continue;
             }
-            string line2 = L.Module(c.Owner) + " · " + L.State(c.State) + (HasCargo(c.Cfg) ? " · " + (c.Fill * 100f).ToString("0") + "%" : "");
+            string line2 = L.Module(c.Owner) + " · " + L.State(c.State) + (HasCargo(c.Cfg) ? " · " + c.Percent + "%" : "");
             _fleetText.Add(name + "\n" + line2);
             _fleetTips.Add(QuickWidgetModifiers.ToolTip(name + "\n" + c.StatusText));
         }
@@ -839,7 +839,7 @@ internal sealed partial class MinerWindow : QuickWindowBox
                 return 28f + Gap;
             }
             gui.Label(HasCargo(c.Cfg)
-                ? L.F("MiningDrone/StateLineCells", L.State(c.State), c.UsedCells, c.AvailCells, (c.Fill * 100f).ToString("0"))
+                ? L.F("MiningDrone/StateLineCells", L.State(c.State), c.UsedCells, c.AvailCells, c.Percent)
                 : L.F("MiningDrone/StateOnly", L.State(c.State)), H28, LeftAlign);
             // Fixed heights: the returned height sizes the tab below, so wrapped text must not grow past it.
             gui.Label(c.StatusText, H48, LeftAlign, Wrap, Ellipsis);
@@ -855,7 +855,7 @@ internal sealed partial class MinerWindow : QuickWindowBox
             return 28f + 48f + 24f + 3f * Gap;
         }
         int working = 0, pausedN = 0, outside = 0, cargo = 0;
-        float lo = 1f, hi = 0f;
+        int lo = 100, hi = 0;
         for (int i = 0; i < _ships.Count; i++)
         {
             ShipAgent? c = MinerManager.Get(_ships[i]);
@@ -875,8 +875,8 @@ internal sealed partial class MinerWindow : QuickWindowBox
             if (HasCargo(c.Cfg))
             {
                 cargo++;
-                lo = Math.Min(lo, c.Fill);
-                hi = Math.Max(hi, c.Fill);
+                lo = Math.Min(lo, c.Percent);
+                hi = Math.Max(hi, c.Percent);
             }
         }
         gui.Label(L.F("MiningDrone/GroupStatus", working, pausedN, outside), H28, LeftAlign, ShrinkLabel);
@@ -884,7 +884,7 @@ internal sealed partial class MinerWindow : QuickWindowBox
         {
             return 28f + Gap;
         }
-        gui.Label(L.F("MiningDrone/CargoRange", (lo * 100f).ToString("0"), (hi * 100f).ToString("0")), H28, LeftAlign);
+        gui.Label(L.F("MiningDrone/CargoRange", lo, hi), H28, LeftAlign);
         return 56f + 2f * Gap;
     }
 

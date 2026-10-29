@@ -116,11 +116,18 @@ internal sealed partial class ShipAgent
     public string Status { get; private set; } = "";
     public Ship? Target { get; private set; }
 
-    /// <summary>Hold fill used for the threshold and shown everywhere: cell fill, or 100% when the hold physically
-    /// accepts no more units, so the trigger and the displayed % always agree.</summary>
+    /// <summary>Hold fill in cells (UsedCells / AvailCells), shown everywhere as <see cref="Percent"/> and compared with the threshold.</summary>
     public float Fill { get; private set; }
+    public int Percent { get; private set; }
     public int UsedCells { get; private set; }
     public int AvailCells { get; private set; }
+
+    /// <summary>Offloadable cargo aboard and no unit of any offloadable type fits (free cells may still exist: carried
+    /// cargo, vanilla resource limits, cells preferred for other types). A separate, explicit reason, not a faked %.</summary>
+    private bool _noUnitFits;
+
+    /// <summary>Offload is due: the shown fill reached the threshold, or the hold takes nothing more.</summary>
+    private bool AtThreshold => Fill >= Cfg.Threshold || _noUnitFits;
 
     /// <summary>The module that owns movement now, or null while re-planning / idle.</summary>
     public ModuleType? Owner { get; private set; }
@@ -317,19 +324,20 @@ internal sealed partial class ShipAgent
         // Cargo = offloadable types above their keep-on-board amounts (vanilla resource desire).
         _offMask = World.OffloadMask(Cfg.KeepAll);
         World.CargoFill(Ship, _offMask, out int stored, out int remaining);
-        // Fill shown and used for the threshold = cargo-bay cells (what the player sees); a hold that physically
-        // takes no more units counts as full too, so the trigger and the displayed % always agree.
+        // Fill shown and used for the threshold = cargo-bay cells (what the player sees); a hold that takes no more
+        // units triggers offload on its own (_noUnitFits) instead of overriding the shown fill.
         World.CargoCells(Ship, _offMask, out int usedCells, out int totalCells, out int reservedCells);
         int avail = totalCells - reservedCells;
-        float cellFill = avail > 0 ? Math.Min(1f, (float)usedCells / avail) : (totalCells > 0 ? 1f : 0f);
-        Fill = stored > 0 && remaining <= 0 ? 1f : cellFill;
+        Fill = CellFill(usedCells, avail, totalCells);
+        Percent = CellPercent(usedCells, avail, totalCells);
+        _noUnitFits = stored > 0 && remaining <= 0;
         UsedCells = usedCells;
         AvailCells = avail;
         int sig = usedCells * 1_000_000 + totalCells * 1000 + reservedCells;
         if (sig != _cellSig)
         {
             _cellSig = sig;
-            Log.Debug(Id, $"cargo cells: used {usedCells} / available {avail} (total {totalCells}, reserved for keep {reservedCells}); offloadable units above keep {stored}, unit space left {remaining}; fill {Fill * 100f:0}%");
+            Log.Debug(Id, $"cargo cells: used {usedCells} / available {avail} (total {totalCells}, reserved for keep {reservedCells}); offloadable units above keep {stored}, unit space left {remaining}; fill {Percent}%");
         }
         if (stored > _lastStored)
         {
@@ -732,8 +740,8 @@ internal sealed partial class ShipAgent
             return false;
         }
         // Below the threshold a rock whose ore has no room is skipped (DoMining), not a reason to return; a hold that
-        // takes no unit at all shows 100% (Fill), so it always lands here.
-        if (Fill >= Cfg.Threshold)
+        // takes no unit at all is due as well (AtThreshold).
+        if (AtThreshold)
         {
             why = remaining <= 0 || NoRoomForTarget(out _) ? HoldFullReason() : L.T("MiningDrone/CargoFull");
             return true;
@@ -829,7 +837,7 @@ internal sealed partial class ShipAgent
             GoToBase(game, now, L.T("MiningDrone/UnloadNowReason"));
             return;
         }
-        if (Cfg.Offload.Active && Fill >= Cfg.Threshold && stored > 0 && !HarvestOutranksOffload(remaining))
+        if (Cfg.Offload.Active && AtThreshold && stored > 0 && !HarvestOutranksOffload(remaining))
         {
             GoToBase(game, now, remaining <= 0 ? L.T("MiningDrone/HoldFull") : L.T("MiningDrone/CargoFull"));
             return;
@@ -1267,7 +1275,7 @@ internal sealed partial class ShipAgent
             // Nothing this rock yields that we collect fits any more: skip it; the search only offers rocks with a
             // type that still has room (live capacity, so freed space makes it eligible again).
             string res = World.IndexOf(noRoom) is int ni && ni >= 0 ? World.Resources[ni].NameKey.Text : noRoom.ToString();
-            Log.Info($"[{Id}] no room for {noRoom} (or banned) from {Target!.Metadata.PlainShipName}; skipping it (fill {Fill * 100f:0}%)");
+            Log.Info($"[{Id}] no room for {noRoom} (or banned) from {Target!.Metadata.PlainShipName}; skipping it (fill {Percent}%)");
             if (!HasForeignQueued())
             {
                 Stop(game);
@@ -1560,7 +1568,7 @@ internal sealed partial class ShipAgent
         }
         if (now - _lastProgressAt > OffloadStallMs)
         {
-            if (Fill < Cfg.Threshold)
+            if (!AtThreshold)
             {
                 ClearTemp(TempIntent.UnloadNow);
                 SetOwner(null, "");
